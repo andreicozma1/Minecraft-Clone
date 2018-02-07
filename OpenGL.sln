@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL", "OpenGL\OpenGL.vcxproj", "{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}.Debug|x64.ActiveCfg = Debug|x64
+		{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}.Debug|x64.Build.0 = Debug|x64
+		{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}.Debug|x86.ActiveCfg = Debug|Win32
+		{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}.Debug|x86.Build.0 = Debug|Win32
+		{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}.Release|x64.ActiveCfg = Release|x64
+		{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}.Release|x64.Build.0 = Release|x64
+		{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}.Release|x86.ActiveCfg = Release|Win32
+		{B8FE69AA-2D2F-4661-A54F-06CDAC76B81A}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {13DE7B5C-A1B8-48E4-9E19-1039B89D8AFF}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://andreicz.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = OpenGL\\OpenGL.vcxproj
+		SccProjectName1 = OpenGL
+		SccLocalPath1 = OpenGL
+	EndGlobalSection
+EndGlobal
+
