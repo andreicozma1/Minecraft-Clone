@@ -14,6 +14,7 @@
 #include <FastNoise.h>
 #include <algorithm>
 #include <chrono>
+#include <time.h>  
 using namespace std;
 
 float positions[] = {
@@ -64,7 +65,7 @@ glm::mat4 projectionTransform(1.0f);
 
 FastNoise noiseGenerator;
 
-float frameTime;
+
 
 int vertexCt = 0;
 int verticesInCube = 6 * 6;
@@ -113,7 +114,7 @@ struct {
 	float forwardSpeed = 0.15f;
 	float runSpeedMultiplier = 1.5;
 	float strafeSpeed = 0.1f;
-	float flySpeed = 2.0f;
+	float flySpeed = .5f;
 	bool isJumping = false;
 	float fallSpeed = -0.25f;
 } player;
@@ -145,6 +146,8 @@ const int chunksToGenerateAcross = world.chunks.toGenerate * 2 + 1;
 float ***chunks = new float**[1000000];
 
 __int64 timeCurrent;
+float frameTime;
+float frameTimeMultiplier;
 
 float cameraRotX = 0, cameraRotY = 0;
 float cameraSpeed = 0.5f;
@@ -346,7 +349,6 @@ float** addChunk(float chunkX, float chunkZ) {
 	return chunkData;
 }
 
-__int64 timeJumpStart;
 
 void jump(float height, float speed) {
 	if (!player.isJumping) {
@@ -377,27 +379,26 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
 		if (!flying) {
 			jump(player.height * 2, 6);
-			timeJumpStart = timeCurrent;
 		}
 	}
 }
 void handleInput() {
 
 	if (input.keyboard.isKeyPressed[GLFW_KEY_W]) {
-		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY)) * frameTime;
-		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTime;
+		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY)) * frameTimeMultiplier;
+		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTimeMultiplier;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_S]) {
-		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTime;
-		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTime;
+		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTimeMultiplier;
+		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTimeMultiplier;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_A]) {
-		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTime;
-		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTime;
+		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTimeMultiplier;
+		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTimeMultiplier;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_D]) {
-		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTime;
-		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTime;
+		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTimeMultiplier;
+		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTimeMultiplier;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_LEFT_SHIFT]) {
 		if (flying) {
@@ -531,6 +532,10 @@ void generateChunks() {
 bool rerenderChunks = true;
 
 
+__int64 getTime() {
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
 int main(void)
 {
 	if (!glfwInit())
@@ -613,22 +618,21 @@ int main(void)
 	chunks[0][7] = drawChunk(chunks[0]);
 	*/
 
-	srand(time(0));
+	srand(getTime());
 	float seed = rand() % 1000000;
 	noiseGenerator.SetSeed(seed);
+	cout << seed << endl;
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window.instance))
 	{
-
-		timeCurrent = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		timeCurrent = getTime();
 
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		projectionTransform = glm::perspective(glm::radians(window.fov), window.width / window.height, 0.1f, 255.0f);
 		glUniformMatrix4fv(projectionUniform, 1, GL_FALSE, glm::value_ptr(projectionTransform));
-
 
 		glm::mat4 viewTransform(1.0f);
 		glm::mat4 viewRotateX(1.0f);
@@ -717,7 +721,6 @@ int main(void)
 					}
 
 					renderChunk(chunks[i]);
-					
 				}
 			}
 		}
@@ -727,21 +730,20 @@ int main(void)
 			if (!player.isJumping) {
 				if (player.position.y > getHeight(biomes.current, player.position.x, player.position.z) + player.height) {
 					player.position.y += player.fallSpeed;
-					player.fallSpeed -= 0.02f * frameTime;
+					player.fallSpeed -= 0.02f * frameTimeMultiplier;
 				}
 				else if (player.position.y <= getHeight(biomes.current, player.position.x, player.position.z) + player.height - 0.25f) {
 					jump(player.height * .7, 9);
 				}
 				else {
 					player.position.y = getHeight(biomes.current, player.position.x, player.position.z) + player.height;
-					player.fallSpeed = -0.25f * frameTime;
+					player.fallSpeed = -0.25f;
 				}
 			}
 			else {
-				jumpCounter = (timeCurrent - timeJumpStart)/30.0;
-				player.position.y = getHeight(biomes.current, jumpBlockX, jumpBlockZ) + player.height + sin(glm::radians(jumpCounter * jumpSpeed)) * jumpHeight;
+				jumpCounter += frameTimeMultiplier;
+				player.position.y = -pow(jumpCounter/80 * jumpSpeed - sqrt(jumpHeight),2) + jumpHeight + getHeight(biomes.current, jumpBlockX, jumpBlockZ) + player.height;
 				if (player.position.y <= getHeight(biomes.current, player.position.x, player.position.z) + player.height) {
-				
 					player.position.y = getHeight(biomes.current, player.position.x, player.position.z) + player.height;
 					player.isJumping = false;
 					jumpCounter = 0;
@@ -752,9 +754,10 @@ int main(void)
 		glfwSwapBuffers(window.instance);
 		glfwPollEvents();
 
-		__int64 ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		frameTime = (ms1 - timeCurrent)/25;
-		cout << frameTime << endl;
+		__int64 ms1 = getTime();
+		frameTime = ms1 - timeCurrent;
+		frameTimeMultiplier = frameTime /16;
+		//cout << frameTimeMultiplier << endl;
 	}
 
 	t1.detach();
