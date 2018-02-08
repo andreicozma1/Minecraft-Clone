@@ -64,6 +64,7 @@ glm::mat4 projectionTransform(1.0f);
 
 FastNoise noiseGenerator;
 
+float frameTime;
 
 int vertexCt = 0;
 int verticesInCube = 6 * 6;
@@ -125,8 +126,8 @@ struct {
 		} current;
 		int size = 17;
 		int totalCount = 0;
-		static const int toGenerate = 9;
-		static const int toRender = 7;
+		static const int toGenerate = 7;
+		static const int toRender = 5;
 		int rendered = 0;
 	} chunks;
 } world;
@@ -379,28 +380,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			timeJumpStart = timeCurrent;
 		}
 	}
-
-	
-
-	
 }
 void handleInput() {
 
 	if (input.keyboard.isKeyPressed[GLFW_KEY_W]) {
-		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY));
-		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY));
+		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY)) * frameTime;
+		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTime;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_S]) {
-		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY));
-		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY));
+		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTime;
+		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTime;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_A]) {
-		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY));
-		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY));
+		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTime;
+		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTime;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_D]) {
-		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY));
-		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY));
+		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTime;
+		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTime;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_LEFT_SHIFT]) {
 		if (flying) {
@@ -663,7 +660,7 @@ int main(void)
 				player.looking.x = sin(glm::radians(cameraRotY));
 				player.looking.y = -sin(glm::radians(cameraRotX));
 				player.looking.z = -cos(glm::radians(cameraRotY));
-				cout << "looking: " << player.looking.x << ", " << player.looking.y << ", " << player.looking.z << endl;
+				//cout << "looking: " << player.looking.x << ", " << player.looking.y << ", " << player.looking.z << endl;
 			}
 			glfwSetCursorPos(window.instance, window.width / 2, window.height / 2);
 		}
@@ -730,14 +727,14 @@ int main(void)
 			if (!player.isJumping) {
 				if (player.position.y > getHeight(biomes.current, player.position.x, player.position.z) + player.height) {
 					player.position.y += player.fallSpeed;
-					player.fallSpeed -= 0.02f;
+					player.fallSpeed -= 0.02f * frameTime;
 				}
 				else if (player.position.y <= getHeight(biomes.current, player.position.x, player.position.z) + player.height - 0.25f) {
 					jump(player.height * .7, 9);
 				}
 				else {
 					player.position.y = getHeight(biomes.current, player.position.x, player.position.z) + player.height;
-					player.fallSpeed = -0.25f;
+					player.fallSpeed = -0.25f * frameTime;
 				}
 			}
 			else {
@@ -754,6 +751,10 @@ int main(void)
 
 		glfwSwapBuffers(window.instance);
 		glfwPollEvents();
+
+		__int64 ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		frameTime = (ms1 - timeCurrent)/25;
+		cout << frameTime << endl;
 	}
 
 	t1.detach();
