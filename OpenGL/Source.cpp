@@ -76,8 +76,8 @@ bool shouldGenerateChunks = true;
 bool regenerateChunks = true;
 
 struct {
-	float width = 800 * 1.5;
-	float height = 600 *  1.2;
+	float width = 1920;
+	float height = 1080;
 	float fov = 45.0;
 	bool hasFocus = false;
 	GLFWwindow* instance;
@@ -171,7 +171,7 @@ struct {
 	int maxHeight = 0;
 } biomes;
 
-int getHeight(int biome, int x, int z) {
+float getHeight(int biome, int x, int z) {
 	int result;
 
 	switch (biome) {
