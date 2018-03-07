@@ -143,9 +143,8 @@ int jumpBlockZ = 0;
 const int chunksToRenderAcross = world.chunks.toRender * 2 + 1;
 const int chunksToGenerateAcross = world.chunks.toGenerate * 2 + 1;
 
-vector<vector<vector<int>>> chunks;
+int ***chunks = new int**[1000000];
 float **chunkMeshes = new float*[1000000];
-
 
 __int64 timeCurrent;
 float frameTime;
@@ -207,14 +206,14 @@ float getHeight(int biome, int x, int z) {
 	return result;
 }
 
-float* drawChunk(vector<vector<int>> chunk) {
+float* drawChunk(int **chunk) {
 
-	float *chunkMesh = new float[chunk[2][0] * 36];
+	float *chunkMesh = new float[*chunk[2] * 36];
 
 	//cout << *chunk[2] << endl;
 
 	int vertexCt = 0;
-	for (int x = 0; x < chunk[2][0]; x++) {
+	for (int x = 0; x < *chunk[2]; x++) {
 		//myFile << "type: " << *chunk[3][x] << " ... " << *chunk[4][x] << " " << *chunk[5][x] << " " << *chunk[6][x] << endl;
 		if ((chunk[3][x] >= 0) && chunk[3][x] <= 150) {
 			bool drawFront = false;
@@ -224,11 +223,11 @@ float* drawChunk(vector<vector<int>> chunk) {
 			bool drawLeft = false;
 			bool drawRight = false;
 
-			if (chunk[5][x] + 1 > getHeight(biomes.current, chunk[0][0] * world.chunks.size + chunk[4][x], chunk[1][0] * world.chunks.size + chunk[6][x] - 1)) {
+			if (chunk[5][x] + 1 > getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x], *chunk[1] * world.chunks.size + chunk[6][x] - 1)) {
 				drawBack = true;
 				// BACK
 			}
-			if (chunk[5][x] + 1 > getHeight(biomes.current, chunk[0][0] * world.chunks.size + chunk[4][x], chunk[1][0] * world.chunks.size + chunk[6][x] + 1)) {
+			if (chunk[5][x] + 1 > getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x], *chunk[1] * world.chunks.size + chunk[6][x] + 1)) {
 				// FRONT
 				drawFront = true;
 			}
@@ -243,12 +242,12 @@ float* drawChunk(vector<vector<int>> chunk) {
 				// TOP
 			}
 
-			if (chunk[5][x] + 1 > getHeight(biomes.current, chunk[0][0] * world.chunks.size + chunk[4][x] - 1, chunk[1][0] * world.chunks.size + chunk[6][x])) { // 2 is offset to account for "air" *chunk[3] surrounding *chunk. 1 accounts for 0
+			if (chunk[5][x] + 1 > getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x] - 1, *chunk[1] * world.chunks.size + chunk[6][x])) { // 2 is offset to account for "air" *chunk[3] surrounding *chunk. 1 accounts for 0
 				drawFront = true;
 				// LEFT
 			}
 
-			if (chunk[5][x] + 1 > getHeight(biomes.current, chunk[0][0] * world.chunks.size + chunk[4][x] + 1, chunk[1][0] * world.chunks.size + chunk[6][x])) { // 2 is offset to account for "air" *chunk[3] surrounding *chunk. 1 accounts for 0
+			if (chunk[5][x] + 1 > getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x] + 1, *chunk[1] * world.chunks.size + chunk[6][x])) { // 2 is offset to account for "air" *chunk[3] surrounding *chunk. 1 accounts for 0
 				drawRight = true;
 				// RIGHT
 			}
@@ -294,7 +293,7 @@ float* drawChunk(vector<vector<int>> chunk) {
 	return chunkMesh;
 }
 
-vector<vector<int>> addChunk(int chunkX, int chunkZ) {
+int** addChunk(float chunkX, float chunkZ) {
 	//vector<float> chunkMesh(10000000);
 
 	int chunkLim = (world.chunks.size - 1) / 2;
@@ -302,21 +301,11 @@ vector<vector<int>> addChunk(int chunkX, int chunkZ) {
 
 	int maxBlocks = (world.chunks.size + 2) * (255 * 2 + 2 + 1) * (world.chunks.size + 2);
 
-	/*
 	int *blocks = new int[maxBlocks];
 	int *xPos = new int[maxBlocks];
 	int *yPos = new int[maxBlocks];
 	int *zPos = new int[maxBlocks];
-	*/
-
-	vector<int> blocks(maxBlocks);
-	blocks.reserve(maxBlocks);
-	vector<int> xPos(maxBlocks);
-	xPos.reserve(maxBlocks);
-	vector<int> yPos(maxBlocks);
-	yPos.reserve(maxBlocks);
-	vector<int> zPos(maxBlocks);
-	zPos.reserve(maxBlocks);
+	
 
 	int blocksIter = 0;
 	for (int x = -chunkLim - 1; x <= chunkLim + 1; x++) {
@@ -334,30 +323,29 @@ vector<vector<int>> addChunk(int chunkX, int chunkZ) {
 						xPos[blocksIter] = x;
 						yPos[blocksIter] = y;
 						zPos[blocksIter] = z;
-					}
+					}	
 				}
 				blocksIter++;
 			}
 		}
 	}
 
-	vector<vector<int>> chunkData;
-	vector<int> chunX;
-	chunX[0] = chunkX;
-	vector<int> chunZ;
-	chunZ[0] = chunkZ;
-	vector<int> blocCt;
-	blocCt[0] = blocksIter;
+	int **chunkData = new int*[8];
+	int *chunX = new int;
+	*chunX = chunkX;
+	int *chunZ = new int;
+	*chunZ = chunkZ;
+	int *blocCt = new int;
+	*blocCt = blocksIter;
 	chunkData[0] = chunX;
 	chunkData[1] = chunZ;
 	chunkData[2] = blocCt;
-
 	chunkData[3] = blocks;
 	chunkData[4] = xPos;
 	chunkData[5] = yPos;
 	chunkData[6] = zPos;
 
-
+	
 	return chunkData;
 }
 
@@ -387,7 +375,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
 		player.forwardSpeed /= player.runSpeedMultiplier;
-	}
+	} 
 	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
 		if (!flying) {
 			jump(player.height * 2, 6);
@@ -417,7 +405,7 @@ void handleInput() {
 			player.position.y -= player.flySpeed;
 		}
 		else {
-
+			
 		}
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_SPACE]) {
@@ -470,14 +458,14 @@ int blocks = 0;
 
 unsigned int buffer;
 
-void renderChunk(vector<vector<int>> chunk, float *chunkMesh) {
+void renderChunk(int **chunk, float *chunkMesh) {
 	//cout << chunk << endl;
 	glBufferData(GL_ARRAY_BUFFER, 1000000, chunkMesh, GL_DYNAMIC_DRAW);
 
 	glm::mat4 modelTranslate(1.0f);
 	glm::mat4 modelRotate(1.0f);
 	glm::mat4 modelScale(1.0f);
-	modelTranslate = glm::translate(modelTranslate, glm::vec3(world.chunks.size * chunk[0][0] - player.position.x, 0.0f - player.position.y, world.chunks.size * chunk[1][0] - player.position.z));
+	modelTranslate = glm::translate(modelTranslate, glm::vec3(world.chunks.size * *chunk[0] - player.position.x, 0.0f - player.position.y, world.chunks.size * *chunk[1] - player.position.z));
 	glm::mat4 modelTransform = modelRotate * modelTranslate * modelScale;
 	int modelUniform = glGetUniformLocation(shader, "model");
 	glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(modelTransform));
@@ -490,57 +478,49 @@ int refMiddleChunkZ;
 
 void generateChunks() {
 
-	if (window.hasFocus) {
-		refMiddleChunkX = world.chunks.current.x;
-		refMiddleChunkZ = world.chunks.current.z;
+	if(window.hasFocus){
+	refMiddleChunkX = world.chunks.current.x;
+	refMiddleChunkZ = world.chunks.current.z;
 
-		for (int a = 0; a <= world.chunks.toGenerate; a++) {
-			for (int b = -1; b <= 1; b++) {
-				if (b != 0) {
-					int x = a * b;
-					for (int z = 0; z < chunksToGenerateAcross; z++) {
-						bool alreadyExists = false;
-						for (int i = 0; i < world.chunks.totalCount; i++) {
-							//if (*chunks[i] != 0) {
-							if (chunks[i][0][0] == world.chunks.current.x + x &&
-								chunks[i][1][0] == world.chunks.current.z + z - world.chunks.toGenerate) {
+	for (int a = 0; a <= world.chunks.toGenerate; a++) {
+		for (int b = -1; b <= 1; b++) {
+			if (b != 0) {
+				int x = a * b;
+				for (int z = 0; z < chunksToGenerateAcross; z++) {
+					bool alreadyExists = false;
+					for (int i = 0; i < world.chunks.totalCount; i++) {
+						if (*chunks[i] != 0) {
+							if (*chunks[i][0] == world.chunks.current.x + x &&
+								*chunks[i][1] == world.chunks.current.z + z - world.chunks.toGenerate) {
 								alreadyExists = true;
 							}
 
-							if (chunks[i][0][0] < world.chunks.current.x - world.chunks.toGenerate ||
-								chunks[i][0][0] > world.chunks.current.x + world.chunks.toGenerate ||
-								chunks[i][1][0] < world.chunks.current.z - world.chunks.toGenerate ||
-								chunks[i][1][0] > world.chunks.current.z + world.chunks.toGenerate) {
-								chunks[i][0].clear();
-								chunks[i][1].clear();
-								chunks[i][2].clear();
-								chunks[i][3].clear();
-								chunks[i][4].clear();
-								chunks[i][5].clear();
-								chunks[i][6].clear();
-
-								chunks[i][0].shrink_to_fit();
-								chunks[i][1].shrink_to_fit();
-								chunks[i][2].shrink_to_fit();
-								chunks[i][3].shrink_to_fit();
-								chunks[i][4].shrink_to_fit();
-								chunks[i][5].shrink_to_fit();
-								chunks[i][6].shrink_to_fit();
-								//chunks[i] = 0;
+							if (*chunks[i][0] < world.chunks.current.x - world.chunks.toGenerate ||
+								*chunks[i][0] > world.chunks.current.x + world.chunks.toGenerate ||
+								*chunks[i][1] < world.chunks.current.z - world.chunks.toGenerate ||
+								*chunks[i][1] > world.chunks.current.z + world.chunks.toGenerate) {
+								delete[] chunks[i][0];
+								delete[] chunks[i][1];
+								delete[] chunks[i][2];
+								delete[] chunks[i][3];
+								delete[] chunks[i][4];
+								delete[] chunks[i][5];
+								delete[] chunks[i][6];
+								*chunks[i] = 0;
 							}
-							//}
 						}
-						if (!alreadyExists) {
-							//chunks[world.chunks.totalCount - chunksAcross * chunksAcross] = 0;
-							chunks[world.chunks.totalCount] = addChunk(refMiddleChunkX + x, refMiddleChunkZ + z - world.chunks.toGenerate);
-							chunkMeshes[world.chunks.totalCount] = drawChunk(chunks[world.chunks.totalCount]);
-							world.chunks.totalCount++;
-						}
-						//cout << world.chunks.totalCount << " ... " << x << ", " << z << endl;
 					}
+					if (!alreadyExists) {
+						//chunks[world.chunks.totalCount - chunksAcross * chunksAcross] = 0;
+						chunks[world.chunks.totalCount] = addChunk(refMiddleChunkX + x, refMiddleChunkZ + z - world.chunks.toGenerate);
+						chunkMeshes[world.chunks.totalCount] = drawChunk(chunks[world.chunks.totalCount]);
+						world.chunks.totalCount++;
+					}
+					//cout << world.chunks.totalCount << " ... " << x << ", " << z << endl;
 				}
 			}
 		}
+	}
 	}
 
 	regenerateChunks = false;
@@ -663,7 +643,7 @@ int main(void)
 
 		window.hasFocus = glfwGetWindowAttrib(window.instance, GLFW_FOCUSED);
 		//cout << "playerPosition: " << player.position.x << ", " <<player.position.y << ", " << player.position.z << endl;
-		if (window.hasFocus) {
+		if (window.hasFocus){
 			glfwGetCursorPos(window.instance, &input.mouse.x, &input.mouse.y);
 			if (input.mouse.x > 0 && input.mouse.y > 0 && input.mouse.x < window.width && input.mouse.y < window.height) {
 
@@ -689,58 +669,58 @@ int main(void)
 		}
 
 		regenerateChunks = true;
-
+		
 
 
 		if (world.chunks.totalCount > 0) {
 			for (int i = 0; i < world.chunks.totalCount; i++) {
-				//if (*chunks[i] != 0) {
+				if (*chunks[i] != 0) {
+					
+					//cout << world.chunks.current.x << ", " << world.chunks.current.z << endl;
 
-				//cout << world.chunks.current.x << ", " << world.chunks.current.z << endl;
+					int absCurrX = abs(world.chunks.current.x);
 
-				int absCurrX = abs(world.chunks.current.x);
+					int absCurrZ = abs(world.chunks.current.x);
 
-				int absCurrZ = abs(world.chunks.current.x);
+					int absCX = abs(*chunks[i][0]);
 
-				int absCX = abs(chunks[i][0][0]);
+					int absCZ = abs(*chunks[i][1]);
 
-				int absCZ = abs(chunks[i][1][0]);
-
-				int disX = absCX - absCurrX;
-				int disZ = absCZ - absCurrZ;
+					int disX = absCX - absCurrX;
+					int disZ = absCZ - absCurrZ;
 
 
-				if (player.looking.z < -.5 &&
-					(world.chunks.current.z < chunks[i][1][0] ||
-						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender ||
-						chunks[i][0][0] < world.chunks.current.x - world.chunks.toRender / ((player.looking.z < -.87) ? 2 : 1) ||
-						chunks[i][0][0] > world.chunks.current.x + world.chunks.toRender / ((player.looking.z < -.87) ? 2 : 1))) {
-					continue;
+					if (player.looking.z < -.5 && 
+						(world.chunks.current.z < *chunks[i][1] || 
+						*chunks[i][1] < world.chunks.current.z - world.chunks.toRender || 
+						*chunks[i][0] < world.chunks.current.x - world.chunks.toRender / ((player.looking.z < -.87)?2:1) ||
+						*chunks[i][0] > world.chunks.current.x + world.chunks.toRender / ((player.looking.z < -.87) ? 2:1))) {
+						continue;
+					}
+					if (player.looking.z > .5 && 
+						(world.chunks.current.z > *chunks[i][1] ||
+						*chunks[i][1] > world.chunks.current.z + world.chunks.toRender || 
+						*chunks[i][0] < world.chunks.current.x - world.chunks.toRender / ((player.looking.z > .87) ? 2 : 1) ||
+						*chunks[i][0] > world.chunks.current.x + world.chunks.toRender / ((player.looking.z > .87) ? 2 : 1))) {
+						continue;
+					}
+					if (player.looking.x < -.5 && 
+						(world.chunks.current.x < *chunks[i][0] ||
+						*chunks[i][0] < world.chunks.current.x - world.chunks.toRender ||
+						*chunks[i][1] < world.chunks.current.z - world.chunks.toRender/((player.looking.x < -.87) ? 2 : 1) ||
+						*chunks[i][1] > world.chunks.current.z + world.chunks.toRender/((player.looking.x < -.87) ? 2 : 1))) {
+						continue;
+					}
+					if (player.looking.x > .5 &&
+						(world.chunks.current.x > *chunks[i][0] ||
+						*chunks[i][0] > world.chunks.current.x + world.chunks.toRender ||
+						*chunks[i][1] < world.chunks.current.z - world.chunks.toRender/ ((player.looking.x > .87) ? 2 : 1) ||
+						*chunks[i][1] > world.chunks.current.z + world.chunks.toRender/ ((player.looking.x > .87) ? 2 : 1))) {
+						continue;
+					}
+
+					renderChunk(chunks[i], chunkMeshes[i]);
 				}
-				if (player.looking.z > .5 &&
-					(world.chunks.current.z > chunks[i][1][0] ||
-						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender ||
-						chunks[i][0][0] < world.chunks.current.x - world.chunks.toRender / ((player.looking.z > .87) ? 2 : 1) ||
-						chunks[i][0][0] > world.chunks.current.x + world.chunks.toRender / ((player.looking.z > .87) ? 2 : 1))) {
-					continue;
-				}
-				if (player.looking.x < -.5 &&
-					(world.chunks.current.x < chunks[i][0][0] ||
-						chunks[i][0][0] < world.chunks.current.x - world.chunks.toRender ||
-						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender / ((player.looking.x < -.87) ? 2 : 1) ||
-						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender / ((player.looking.x < -.87) ? 2 : 1))) {
-					continue;
-				}
-				if (player.looking.x > .5 &&
-					(world.chunks.current.x > chunks[i][0][0] ||
-						chunks[i][0][0] > world.chunks.current.x + world.chunks.toRender ||
-						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender / ((player.looking.x > .87) ? 2 : 1) ||
-						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender / ((player.looking.x > .87) ? 2 : 1))) {
-					continue;
-				}
-
-				renderChunk(chunks[i], chunkMeshes[i]);
-				//}
 			}
 		}
 
@@ -761,7 +741,7 @@ int main(void)
 			}
 			else {
 				jumpCounter += frameTimeMultiplier;
-				player.position.y = -pow(jumpCounter / 80 * jumpSpeed - sqrt(jumpHeight), 2) + jumpHeight + getHeight(biomes.current, jumpBlockX, jumpBlockZ) + player.height;
+				player.position.y = -pow(jumpCounter/80 * jumpSpeed - sqrt(jumpHeight),2) + jumpHeight + getHeight(biomes.current, jumpBlockX, jumpBlockZ) + player.height;
 				if (player.position.y <= getHeight(biomes.current, player.position.x, player.position.z) + player.height) {
 					player.position.y = getHeight(biomes.current, player.position.x, player.position.z) + player.height;
 					player.isJumping = false;
@@ -775,7 +755,7 @@ int main(void)
 
 		__int64 ms1 = getTime();
 		frameTime = ms1 - timeCurrent;
-		frameTimeMultiplier = frameTime / 16;
+		frameTimeMultiplier = frameTime /16;
 		//cout << frameTimeMultiplier << endl;
 	}
 
@@ -783,14 +763,11 @@ int main(void)
 
 	for (int i = 0; i < world.chunks.totalCount; i++) {
 		for (int z = 0; z < 7; z++) {
-			chunks[i][z].clear();
-			chunks[i][z].shrink_to_fit();
+			delete[] chunks[i][z];
 		}
-		chunks[i].clear();
-		chunks[i].shrink_to_fit();
+		delete[] chunks[i];
 	}
-	chunks.clear();
-	chunks.shrink_to_fit();
+	delete[] chunks;
 
 	glDeleteProgram(shader);
 

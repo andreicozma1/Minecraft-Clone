@@ -309,14 +309,10 @@ vector<vector<int>> addChunk(int chunkX, int chunkZ) {
 	int *zPos = new int[maxBlocks];
 	*/
 
-	vector<int> blocks(maxBlocks);
-	blocks.reserve(maxBlocks);
-	vector<int> xPos(maxBlocks);
-	xPos.reserve(maxBlocks);
-	vector<int> yPos(maxBlocks);
-	yPos.reserve(maxBlocks);
-	vector<int> zPos(maxBlocks);
-	zPos.reserve(maxBlocks);
+	vector<int> blocks;
+	vector<int> xPos;
+	vector<int> yPos;
+	vector<int> zPos;
 
 	int blocksIter = 0;
 	for (int x = -chunkLim - 1; x <= chunkLim + 1; x++) {
@@ -334,7 +330,7 @@ vector<vector<int>> addChunk(int chunkX, int chunkZ) {
 						xPos[blocksIter] = x;
 						yPos[blocksIter] = y;
 						zPos[blocksIter] = z;
-					}
+					}	
 				}
 				blocksIter++;
 			}
@@ -357,7 +353,7 @@ vector<vector<int>> addChunk(int chunkX, int chunkZ) {
 	chunkData[5] = yPos;
 	chunkData[6] = zPos;
 
-
+	
 	return chunkData;
 }
 
@@ -387,7 +383,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
 		player.forwardSpeed /= player.runSpeedMultiplier;
-	}
+	} 
 	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
 		if (!flying) {
 			jump(player.height * 2, 6);
@@ -417,7 +413,7 @@ void handleInput() {
 			player.position.y -= player.flySpeed;
 		}
 		else {
-
+			
 		}
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_SPACE]) {
@@ -490,18 +486,18 @@ int refMiddleChunkZ;
 
 void generateChunks() {
 
-	if (window.hasFocus) {
-		refMiddleChunkX = world.chunks.current.x;
-		refMiddleChunkZ = world.chunks.current.z;
+	if(window.hasFocus){
+	refMiddleChunkX = world.chunks.current.x;
+	refMiddleChunkZ = world.chunks.current.z;
 
-		for (int a = 0; a <= world.chunks.toGenerate; a++) {
-			for (int b = -1; b <= 1; b++) {
-				if (b != 0) {
-					int x = a * b;
-					for (int z = 0; z < chunksToGenerateAcross; z++) {
-						bool alreadyExists = false;
-						for (int i = 0; i < world.chunks.totalCount; i++) {
-							//if (*chunks[i] != 0) {
+	for (int a = 0; a <= world.chunks.toGenerate; a++) {
+		for (int b = -1; b <= 1; b++) {
+			if (b != 0) {
+				int x = a * b;
+				for (int z = 0; z < chunksToGenerateAcross; z++) {
+					bool alreadyExists = false;
+					for (int i = 0; i < world.chunks.totalCount; i++) {
+						//if (*chunks[i] != 0) {
 							if (chunks[i][0][0] == world.chunks.current.x + x &&
 								chunks[i][1][0] == world.chunks.current.z + z - world.chunks.toGenerate) {
 								alreadyExists = true;
@@ -528,19 +524,19 @@ void generateChunks() {
 								chunks[i][6].shrink_to_fit();
 								//chunks[i] = 0;
 							}
-							//}
-						}
-						if (!alreadyExists) {
-							//chunks[world.chunks.totalCount - chunksAcross * chunksAcross] = 0;
-							chunks[world.chunks.totalCount] = addChunk(refMiddleChunkX + x, refMiddleChunkZ + z - world.chunks.toGenerate);
-							chunkMeshes[world.chunks.totalCount] = drawChunk(chunks[world.chunks.totalCount]);
-							world.chunks.totalCount++;
-						}
-						//cout << world.chunks.totalCount << " ... " << x << ", " << z << endl;
+						//}
 					}
+					if (!alreadyExists) {
+						//chunks[world.chunks.totalCount - chunksAcross * chunksAcross] = 0;
+						chunks[world.chunks.totalCount] = addChunk(refMiddleChunkX + x, refMiddleChunkZ + z - world.chunks.toGenerate);
+						chunkMeshes[world.chunks.totalCount] = drawChunk(chunks[world.chunks.totalCount]);
+						world.chunks.totalCount++;
+					}
+					//cout << world.chunks.totalCount << " ... " << x << ", " << z << endl;
 				}
 			}
 		}
+	}
 	}
 
 	regenerateChunks = false;
@@ -663,7 +659,7 @@ int main(void)
 
 		window.hasFocus = glfwGetWindowAttrib(window.instance, GLFW_FOCUSED);
 		//cout << "playerPosition: " << player.position.x << ", " <<player.position.y << ", " << player.position.z << endl;
-		if (window.hasFocus) {
+		if (window.hasFocus){
 			glfwGetCursorPos(window.instance, &input.mouse.x, &input.mouse.y);
 			if (input.mouse.x > 0 && input.mouse.y > 0 && input.mouse.x < window.width && input.mouse.y < window.height) {
 
@@ -689,57 +685,57 @@ int main(void)
 		}
 
 		regenerateChunks = true;
-
+		
 
 
 		if (world.chunks.totalCount > 0) {
 			for (int i = 0; i < world.chunks.totalCount; i++) {
 				//if (*chunks[i] != 0) {
+					
+					//cout << world.chunks.current.x << ", " << world.chunks.current.z << endl;
 
-				//cout << world.chunks.current.x << ", " << world.chunks.current.z << endl;
+					int absCurrX = abs(world.chunks.current.x);
 
-				int absCurrX = abs(world.chunks.current.x);
+					int absCurrZ = abs(world.chunks.current.x);
 
-				int absCurrZ = abs(world.chunks.current.x);
+					int absCX = abs(chunks[i][0][0]);
 
-				int absCX = abs(chunks[i][0][0]);
+					int absCZ = abs(chunks[i][1][0]);
 
-				int absCZ = abs(chunks[i][1][0]);
-
-				int disX = absCX - absCurrX;
-				int disZ = absCZ - absCurrZ;
+					int disX = absCX - absCurrX;
+					int disZ = absCZ - absCurrZ;
 
 
-				if (player.looking.z < -.5 &&
-					(world.chunks.current.z < chunks[i][1][0] ||
-						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender ||
-						chunks[i][0][0] < world.chunks.current.x - world.chunks.toRender / ((player.looking.z < -.87) ? 2 : 1) ||
-						chunks[i][0][0] > world.chunks.current.x + world.chunks.toRender / ((player.looking.z < -.87) ? 2 : 1))) {
-					continue;
-				}
-				if (player.looking.z > .5 &&
-					(world.chunks.current.z > chunks[i][1][0] ||
-						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender ||
+					if (player.looking.z < -.5 && 
+						(world.chunks.current.z < chunks[i][1][0] || 
+						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender || 
+						chunks[i][0][0] < world.chunks.current.x - world.chunks.toRender / ((player.looking.z < -.87)?2:1) ||
+						chunks[i][0][0] > world.chunks.current.x + world.chunks.toRender / ((player.looking.z < -.87) ? 2:1))) {
+						continue;
+					}
+					if (player.looking.z > .5 && 
+						(world.chunks.current.z > chunks[i][1][0] ||
+						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender || 
 						chunks[i][0][0] < world.chunks.current.x - world.chunks.toRender / ((player.looking.z > .87) ? 2 : 1) ||
 						chunks[i][0][0] > world.chunks.current.x + world.chunks.toRender / ((player.looking.z > .87) ? 2 : 1))) {
-					continue;
-				}
-				if (player.looking.x < -.5 &&
-					(world.chunks.current.x < chunks[i][0][0] ||
+						continue;
+					}
+					if (player.looking.x < -.5 && 
+						(world.chunks.current.x < chunks[i][0][0] ||
 						chunks[i][0][0] < world.chunks.current.x - world.chunks.toRender ||
-						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender / ((player.looking.x < -.87) ? 2 : 1) ||
-						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender / ((player.looking.x < -.87) ? 2 : 1))) {
-					continue;
-				}
-				if (player.looking.x > .5 &&
-					(world.chunks.current.x > chunks[i][0][0] ||
+						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender/((player.looking.x < -.87) ? 2 : 1) ||
+						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender/((player.looking.x < -.87) ? 2 : 1))) {
+						continue;
+					}
+					if (player.looking.x > .5 &&
+						(world.chunks.current.x > chunks[i][0][0] ||
 						chunks[i][0][0] > world.chunks.current.x + world.chunks.toRender ||
-						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender / ((player.looking.x > .87) ? 2 : 1) ||
-						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender / ((player.looking.x > .87) ? 2 : 1))) {
-					continue;
-				}
+						chunks[i][1][0] < world.chunks.current.z - world.chunks.toRender/ ((player.looking.x > .87) ? 2 : 1) ||
+						chunks[i][1][0] > world.chunks.current.z + world.chunks.toRender/ ((player.looking.x > .87) ? 2 : 1))) {
+						continue;
+					}
 
-				renderChunk(chunks[i], chunkMeshes[i]);
+					renderChunk(chunks[i], chunkMeshes[i]);
 				//}
 			}
 		}
@@ -761,7 +757,7 @@ int main(void)
 			}
 			else {
 				jumpCounter += frameTimeMultiplier;
-				player.position.y = -pow(jumpCounter / 80 * jumpSpeed - sqrt(jumpHeight), 2) + jumpHeight + getHeight(biomes.current, jumpBlockX, jumpBlockZ) + player.height;
+				player.position.y = -pow(jumpCounter/80 * jumpSpeed - sqrt(jumpHeight),2) + jumpHeight + getHeight(biomes.current, jumpBlockX, jumpBlockZ) + player.height;
 				if (player.position.y <= getHeight(biomes.current, player.position.x, player.position.z) + player.height) {
 					player.position.y = getHeight(biomes.current, player.position.x, player.position.z) + player.height;
 					player.isJumping = false;
@@ -775,7 +771,7 @@ int main(void)
 
 		__int64 ms1 = getTime();
 		frameTime = ms1 - timeCurrent;
-		frameTimeMultiplier = frameTime / 16;
+		frameTimeMultiplier = frameTime /16;
 		//cout << frameTimeMultiplier << endl;
 	}
 
