@@ -18,7 +18,15 @@
 #include <chrono>
 #include <time.h>  
 
+/*
+Game game;
+Biomes biomes;
+Player player;
+*/
+
 using namespace std;
+
+
 
 const int elementsInBox = 6 * 6 * 6;
 
@@ -74,7 +82,7 @@ float *elements = new float[1000];
 
 glm::mat4 projectionTransform(1.0f);
 
-FastNoise noiseGenerator;
+
 
 int vertexCt = 0;
 int verticesInCube = 6 * 6;
@@ -85,8 +93,8 @@ bool shouldGenerateChunks = true;
 bool regenerateChunks = true;
 
 struct {
-	float width = 2200;
-	float height = 1200;
+	float width = 1200;
+	float height = 800;
 	float fov = 45.0;
 	bool hasFocus = false;
 	GLFWwindow* instance;
@@ -102,31 +110,6 @@ struct {
 	} keyboard;
 
 } input;
-
-
-struct {
-	struct {
-		float x = 0.0f;
-		float y = 0.0f;
-		float z = 0.0f;
-	} position;
-	struct {
-		float x = 0;
-		float y = 0;
-		float z = 0;
-	} looking;
-	struct {
-		int health = 5;
-		int hunger = 0;
-	} vitals;
-	float height = 1.2f;
-	float forwardSpeed = 0.15f;
-	float runSpeedMultiplier = 1.5;
-	float strafeSpeed = 0.1f;
-	float flySpeed = .5f;
-	bool isJumping = false;
-	float fallSpeed = -0.25f;
-} player;
 
 struct {
 	struct {
@@ -147,12 +130,7 @@ struct {
 
 bool sunOrMoon = true;
 
-bool flying = true;
-float jumpCounter = 0;
-float jumpHeight = player.height * 2;
-float jumpSpeed = 6;
-int jumpBlockX = 0;
-int jumpBlockZ = 0;
+
 
 const int chunksToRenderAcross = world.chunks.toRender * 2 + 1;
 const int chunksToGenerateAcross = world.chunks.toGenerate * 2 + 1;
@@ -164,7 +142,7 @@ float **chunkMeshes = new float*[1000000];
 __int64 timeCurrent;
 __int64 timeWhenStarted;
 float frameTime;
-float frameTimeMultiplier;
+
 
 float cameraRotX = 0, cameraRotY = 0;
 float cameraSpeed = 0.5f;
@@ -178,56 +156,7 @@ ofstream myFile;
 int dirX;
 int dirZ;
 
-#define BIOME_PLAINS 0
-#define BIOME_HILLS 1
-#define BIOME_MOUNTAINS 2
-#define BIOME_CELLULAR 3
-#define CLOUD -1
 
-struct {
-	int current = BIOME_PLAINS;
-	int maxHeight = 0;
-} biomes;
-
-float getHeight(int biome, int x, int z) {
-	int result;
-
-	switch (biome) {
-	case BIOME_PLAINS:
-		noiseGenerator.SetNoiseType(FastNoise::PerlinFractal);
-		noiseGenerator.SetFrequency(0.01);
-		biomes.maxHeight = 15;
-		result = noiseGenerator.GetNoise(x, z) * biomes.maxHeight;
-		break;
-	case BIOME_HILLS:
-		noiseGenerator.SetNoiseType(FastNoise::PerlinFractal);
-		noiseGenerator.SetFrequency(0.01);
-		biomes.maxHeight = 25;
-		result = noiseGenerator.GetNoise(x, z) * biomes.maxHeight;
-		break;
-	case BIOME_MOUNTAINS:
-		noiseGenerator.SetNoiseType(FastNoise::SimplexFractal);
-		noiseGenerator.SetFrequency(0.005);
-		biomes.maxHeight = 75;
-		result = noiseGenerator.GetNoise(x, z) * biomes.maxHeight;
-		break;
-	case BIOME_CELLULAR:
-		noiseGenerator.SetNoiseType(FastNoise::Cellular);
-		noiseGenerator.SetFrequency(0.05);
-		biomes.maxHeight = 15;
-		result = noiseGenerator.GetNoise(x, z) * biomes.maxHeight;
-		break;
-	case CLOUD:
-		noiseGenerator.SetNoiseType(FastNoise::Cubic);
-		noiseGenerator.SetFrequency(0.015);
-		biomes.maxHeight = 3;
-		result = noiseGenerator.GetNoise(x, z) * biomes.maxHeight;
-		break;
-	}
-
-	result = result;
-	return result;
-}
 
 float* drawChunk(int **chunk) {
 
@@ -246,11 +175,11 @@ float* drawChunk(int **chunk) {
 			bool drawLeft = false;
 			bool drawRight = false;
 
-			if (chunk[5][x] + 1 > getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x], *chunk[1] * world.chunks.size + chunk[6][x] - 1)) {
+			if (chunk[5][x] + 1 > biomes.getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x], *chunk[1] * world.chunks.size + chunk[6][x] - 1)) {
 				drawBack = true;
 				// BACK
 			}
-			if (chunk[5][x] + 1 > getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x], *chunk[1] * world.chunks.size + chunk[6][x] + 1)) {
+			if (chunk[5][x] + 1 > biomes.getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x], *chunk[1] * world.chunks.size + chunk[6][x] + 1)) {
 				// FRONT
 				drawFront = true;
 			}
@@ -265,12 +194,12 @@ float* drawChunk(int **chunk) {
 				// TOP
 			}
 
-			if (chunk[5][x] + 1 > getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x] - 1, *chunk[1] * world.chunks.size + chunk[6][x])) { // 2 is offset to account for "air" *chunk[3] surrounding *chunk. 1 accounts for 0
+			if (chunk[5][x] + 1 > biomes.getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x] - 1, *chunk[1] * world.chunks.size + chunk[6][x])) { // 2 is offset to account for "air" *chunk[3] surrounding *chunk. 1 accounts for 0
 				drawFront = true;
 				// LEFT
 			}
 
-			if (chunk[5][x] + 1 > getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x] + 1, *chunk[1] * world.chunks.size + chunk[6][x])) { // 2 is offset to account for "air" *chunk[3] surrounding *chunk. 1 accounts for 0
+			if (chunk[5][x] + 1 > biomes.getHeight(biomes.current, *chunk[0] * world.chunks.size + chunk[4][x] + 1, *chunk[1] * world.chunks.size + chunk[6][x])) { // 2 is offset to account for "air" *chunk[3] surrounding *chunk. 1 accounts for 0
 				drawRight = true;
 				// RIGHT
 			}
@@ -344,7 +273,7 @@ int** addChunk(float chunkX, float chunkZ) {
 					y <= chunkLimY &&
 					z >= -chunkLim &&
 					z <= chunkLim) {
-					int heightVal = getHeight(biomes.current, world.chunks.size*chunkX + x, world.chunks.size*chunkZ + z);
+					int heightVal = biomes.getHeight(biomes.current, world.chunks.size*chunkX + x, world.chunks.size*chunkZ + z);
 					if (y < heightVal) {
 						blocks[blocksIter] = 9;
 						xPos[blocksIter] = x;
@@ -377,67 +306,56 @@ int** addChunk(float chunkX, float chunkZ) {
 }
 
 
-void jump(float height, float speed) {
-	if (!player.isJumping) {
-		jumpHeight = height;
-		jumpSpeed = speed;
-		player.isJumping = true;
-		jumpBlockX = player.position.x;
-		jumpBlockZ = player.position.z;
-		jumpCounter = 0;
-	}
-}
+
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	input.keyboard.isKeyPressed[key] = action;
 	if (key == GLFW_KEY_F && action == GLFW_RELEASE) {
 		//cout << "here" << endl;
-		flying = !flying;
-		jumpCounter = 0;
+		player.canFly = !player.canFly;
+		player.jumpCounter = 0;
 	}
 
 	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) {
-		player.forwardSpeed *= player.runSpeedMultiplier;
+		player.speed.forward *= player.speed.runMultiplier;
 	}
 	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
-		player.forwardSpeed /= player.runSpeedMultiplier;
+		player.speed.forward /= player.speed.runMultiplier;
 	} 
 	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
-		if (!flying) {
-			jump(player.height * 2, 6);
-		}
+		player.Jump(player.height, player.speed.forward);
 	}
 }
 void handleInput() {
 
 	if (input.keyboard.isKeyPressed[GLFW_KEY_W]) {
-		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY)) * frameTimeMultiplier;
-		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTimeMultiplier;
+		player.position.z -= (player.canFly ? player.speed.fly : player.speed.forward) * cos(glm::radians(cameraRotY)) * game.frameTimeMultiplier;
+		player.position.x += (player.canFly ? player.speed.fly : player.speed.forward) * sin(glm::radians(cameraRotY))* game.frameTimeMultiplier;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_S]) {
-		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTimeMultiplier;
-		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTimeMultiplier;
+		player.position.z += (player.canFly ? player.speed.fly : player.speed.forward) * cos(glm::radians(cameraRotY))* game.frameTimeMultiplier;
+		player.position.x -= (player.canFly ? player.speed.fly : player.speed.forward) * sin(glm::radians(cameraRotY))* game.frameTimeMultiplier;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_A]) {
-		player.position.x -= (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTimeMultiplier;
-		player.position.z -= (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTimeMultiplier;
+		player.position.x -= (player.canFly ? player.speed.fly : player.speed.forward) * cos(glm::radians(cameraRotY))* game.frameTimeMultiplier;
+		player.position.z -= (player.canFly ? player.speed.fly : player.speed.forward) * sin(glm::radians(cameraRotY))* game.frameTimeMultiplier;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_D]) {
-		player.position.x += (flying ? player.flySpeed : player.forwardSpeed) * cos(glm::radians(cameraRotY))* frameTimeMultiplier;
-		player.position.z += (flying ? player.flySpeed : player.forwardSpeed) * sin(glm::radians(cameraRotY))* frameTimeMultiplier;
+		player.position.x += (player.canFly ? player.speed.fly : player.speed.forward) * cos(glm::radians(cameraRotY))* game.frameTimeMultiplier;
+		player.position.z += (player.canFly ? player.speed.fly : player.speed.forward) * sin(glm::radians(cameraRotY))* game.frameTimeMultiplier;
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_LEFT_SHIFT]) {
-		if (flying) {
-			player.position.y -= player.flySpeed;
+		if (player.canFly) {
+			player.position.y -= player.speed.fly;
 		}
 		else {
 			
 		}
 	}
 	if (input.keyboard.isKeyPressed[GLFW_KEY_SPACE]) {
-		if (flying) {
-			player.position.y += player.flySpeed;
+		if (player.canFly) {
+			player.position.y += player.speed.fly;
 		}
 	}
 
@@ -582,25 +500,6 @@ __int64 getTime() {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-void addSky() {
-	int maxBlocks = 512 * 512;
-
-	int *blocks = new int[maxBlocks];
-	int *xPos = new int[maxBlocks];
-	int *zPos = new int[maxBlocks];
-
-
-	int blocksIter = 0;
-	for (int x = 0; x < 512; x++) {
-		for (int z = 0; z < 512; z++) {
-			//getHeight(CLOUD, x, z);
-			blocks[blocksIter] = 10;
-			xPos[blocksIter] = x;
-			zPos[blocksIter] = z;
-			blocksIter++;
-		}
-	}
-}
 
 int main(void)
 {
@@ -660,7 +559,7 @@ int main(void)
 
 	//myFile.open("blocks.txt", ios::trunc);
 
-	player.position.y = getHeight(biomes.current, player.position.x, player.position.z) + player.height;
+	player.position.y = biomes.getHeight(biomes.current, player.position.x, player.position.z) + player.height;
 
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
@@ -703,12 +602,12 @@ int main(void)
 	chunks[0][7] = drawChunk(chunks[0]);
 	*/
 
-	srand(getTime());
-	float seed = rand() % 1000000;
-	noiseGenerator.SetSeed(seed);
+
 	//cout << seed << endl;
 
 	timeWhenStarted = getTime();
+
+
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window.instance))
@@ -757,6 +656,7 @@ int main(void)
 		}
 
 		regenerateChunks = true;
+
 		
 		
 		if (world.chunks.totalCount > 0) {
@@ -844,9 +744,7 @@ int main(void)
 			}
 		}
 		renderElement(skybox, glm::vec3(0.0f), glm::vec3(280.0f, 280.0f, 280.0f));
-
 		
-
 		cout << "timeCurrent: " << world.stats.time/60/10 << "; sunX: " << sunX << "; sunY: " << sunY << ";" << endl;
 		
 		for (int i = 0; i < 6 * 6; i++) {
@@ -889,38 +787,18 @@ int main(void)
 		world.stats.time = timeCurrent-timeWhenStarted;
 		//renderElement(sun);
 
-		if (!flying) {
-			if (!player.isJumping) {
-				if (player.position.y > getHeight(biomes.current, player.position.x, player.position.z) + player.height) {
-					player.position.y += player.fallSpeed;
-					player.fallSpeed -= 0.02f * frameTimeMultiplier;
-				}
-				else if (player.position.y <= getHeight(biomes.current, player.position.x, player.position.z) + player.height - 0.25f) {
-					jump(player.height * .7, 9);
-				}
-				else {
-					player.position.y = getHeight(biomes.current, player.position.x, player.position.z) + player.height;
-					player.fallSpeed = -0.25f;
-				}
-			}
-			else {
-				jumpCounter += frameTimeMultiplier;
-				player.position.y = -pow(jumpCounter/80 * jumpSpeed - sqrt(jumpHeight),2) + jumpHeight + getHeight(biomes.current, jumpBlockX, jumpBlockZ) + player.height;
-				if (player.position.y <= getHeight(biomes.current, player.position.x, player.position.z) + player.height) {
-					player.position.y = getHeight(biomes.current, player.position.x, player.position.z) + player.height;
-					player.isJumping = false;
-					jumpCounter = 0;
-				}
-			}
-		}
+
+		
+		game.Run(player);
+
 
 		glfwSwapBuffers(window.instance);
 		glfwPollEvents();
 
 		__int64 ms1 = getTime();
 		frameTime = ms1 - timeCurrent;
-		frameTimeMultiplier = frameTime /16;
-		//cout << frameTimeMultiplier << endl;
+		game.frameTimeMultiplier = frameTime /16;
+		//cout << game.frameTimeMultiplier << endl;
 	}
 
 	t1.detach();

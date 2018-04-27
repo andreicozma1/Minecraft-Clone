@@ -85,8 +85,8 @@ bool shouldGenerateChunks = true;
 bool regenerateChunks = true;
 
 struct {
-	float width = 2200;
-	float height = 1200;
+	float width = 1200;
+	float height = 800;
 	float fov = 45.0;
 	bool hasFocus = false;
 	GLFWwindow* instance;
